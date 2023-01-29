@@ -1,7 +1,76 @@
 ---
 title: Deploy Hashicorp Vault cluster on AWS with Terraform
 description: "Let's figure out how to Deploy a Hashicorp Vault cluster on AWS with Terraform"
-date: Jun 2 2021
+date: Jan 29 2023
 ---
+
+Hashicorp Vault is an open-source tool that provides secure, centralized secrets management. It allows applications and services to securely access secrets, such as database credentials, API keys, and certificates, without hardcoding them in the source code.
+
+In this blog post, we'll be walking through the process of deploying a Hashicorp Vault cluster on Amazon Web Services (AWS) using Terraform. Terraform is an open-source tool for provisioning and managing infrastructure as code.
+
+Step 1: Create a Terraform Configuration File
+
+The first step in deploying a Vault cluster with Terraform is to create a Terraform configuration file. This file defines the infrastructure components needed to run a Vault cluster on AWS.
+
+Here is an example of a Terraform configuration file for a Vault cluster:
+
+```
+provider "aws" {
+  region = "us-west-2"
+}
+
+module "vault" {
+  source = "terraform-aws-modules/vault/aws"
+
+  vpc_id     = "vpc-049df61146f12"
+  subnet_ids = ["subnet-049df61146f12"]
+
+  instances_count = 3
+  instance_type   = "t2.medium"
+
+  cluster_name = "vault"
+
+  tags = {
+    Terraform   = "true"
+    Environment = "dev"
+  }
+}
+```
+
+In this example, we're using the AWS provider and a Terraform module from the terraform-aws-modules repository. The module creates an EC2 Auto Scaling group with the specified number of instances running the latest version of Vault.
+
+Step 2: Initialize Terraform
+
+Once you have created the Terraform configuration file, you can run terraform init to initialize Terraform. This step downloads the necessary Terraform plugins and modules required to run the configuration.
+
+Step 3: Plan Terraform
+
+Before deploying the infrastructure, it's a good idea to run terraform plan to see what Terraform is going to deploy and ensure that it matches the desired configuration.
+
+Step 4: Apply Terraform
+
+Once you have reviewed the Terraform plan, you can run terraform apply to deploy the infrastructure components defined in the Terraform configuration. This will create the necessary EC2 instances, Auto Scaling group, security groups, and other components needed to run a Vault cluster on AWS.
+
+Step 5: Configure Vault
+
+After Terraform has deployed the Vault cluster, log in to one of the instances and configure the cluster. This includes setting up the necessary storage backend, enabling the necessary secrets engines, and creating policies.
+
+Here is an example of how to configure Vault to use the file storage backend:
+
+```
+export VAULT_ADDR=http://<vault_instance_ip>:8200
+
+vault operator init
+vault operator unseal
+vault login <root_token>
+
+vault secrets enable -path=secret file
+```
+
+In this example, we're using the file storage backend to store Vault's data. You can also use other storage backends, such as AWS S3 or Consul.
+
+Conclusion:
+
+In this blog post, we walked through the process of deploying a Hashicorp Vault cluster on AWS using Terraform. By using Terraform, we can easily manage and provision the infrastructure.
 
 To Learn how to Interact with H-Vault with Python, click [here](/posts/python-hashicorp).
