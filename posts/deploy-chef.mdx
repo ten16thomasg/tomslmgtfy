@@ -1,7 +1,78 @@
 ---
 title: Deploy Chef Automate Infra with Terraform
 description: "Let's Setup Chef, a configuration management tool for defining infrastructure as code (IAC). "
-date: Sep 14 2021
+date: 1 29 2023
 ---
 
-Under Construction
+Install Terraform: Make sure you have Terraform installed on your system. You can download the latest version from the Terraform website.
+
+Configure Provider: In your Terraform code, configure the Terraform AWS provider. This provider allows Terraform to interact with AWS resources.
+
+
+```
+provider "aws" {
+  region = "us-west-2"
+}
+```
+Create IAM Policy: Create an IAM policy that grants permissions for Terraform to manage AWS resources.
+kotlin
+
+```
+data "aws_iam_policy_document" "example_policy" {
+  statement {
+    actions = ["*"]
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "example_policy" {
+  name = "example_policy"
+
+  policy = data.aws_iam_policy_document.example_policy.json
+}
+
+resource "aws_iam_user" "example_user" {
+  name = "example_user"
+
+  policies = [
+    aws_iam_policy.example_policy.arn,
+  ]
+}
+```
+
+Create EC2 Instance: Create an EC2 instance that will run Chef Automate. This example creates a t2.micro instance with the latest version of Ubuntu.
+python
+
+```
+resource "aws_instance" "example_instance" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+
+  tags = {
+    Name = "example_instance"
+  }
+}
+```
+Install Chef Automate: Install Chef Automate on the EC2 instance using the Chef Automate bootstrapper script.
+
+```
+provider "remote-exec" {
+  inline = [
+    "wget https://packages.chef.io/files/current/latest/chef-automate-cli/chef-automate_linux_amd64.zip",
+    "unzip chef-automate_linux_amd64.zip",
+    "sudo ./chef-automate deploy config.toml",
+  ]
+}
+```
+Initialize Terraform: Initialize Terraform to download the required providers and plugins.
+
+```
+terraform init
+```
+
+Apply Terraform: Apply the Terraform changes to create the AWS resources.
+
+```
+terraform apply
+```
