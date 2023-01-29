@@ -1,0 +1,74 @@
+---
+title: Pageme
+description: "Learn how to use the Pageme Python library to trigger alerts"
+date: Dec 6 2022
+---
+
+PagerDuty is a real-time incident management platform that helps organizations respond to critical incidents and improve their overall response time. The PagerDuty library is a python module that enables developers to integrate the platform into their existing applications, making it possible to automate incident management processes.
+
+The library provides a simple API for interacting with the PagerDuty platform, making it easy for developers to trigger and resolve incidents and retrieve information about incidents and alerts. The API allows for full control over the incident management process, from alert creation to resolution, and provides detailed information about the current state of incidents.
+
+One of the key features of the PagerDuty library is the ability to automate incident management processes. This can greatly improve response times, as incidents can be detected and resolved much faster when automated. For example, if a critical application goes down, the library can trigger an alert, which will be sent to the appropriate team or individual for resolution. This eliminates the need for manual intervention, and ensures that incidents are resolved quickly and efficiently.
+
+The PagerDuty library also provides a rich set of tools for logging and reporting. This allows developers to monitor and track the status of incidents, and to understand the impact of incidents on their systems. Additionally, the library provides the ability to customize the way that alerts are triggered and resolved, making it possible to implement custom workflows and incident management processes.
+
+```
+import json
+import requests
+import time
+import logging
+from typing import Dict
+
+class PagerDutyAlert:
+    def __init__(self, api_key: str, alert_data: Dict, routing_key: str, verbose: bool = False, retries: int = 5):
+        self.api_key = api_key
+        self.alert_data = alert_data
+        self.routing_key = routing_key
+        self.verbose = verbose
+        self.retries = retries
+        self.headers = {
+            "Content-type": "application/json",
+            "Authorization": f"Token token={api_key}"
+        }
+        self.url = "https://events.pagerduty.com/v2/enqueue"
+
+    def run(self, event_action: str) -> None:
+        self.alert_data["routing_key"] = self.routing_key
+        self.alert_data["event_action"] = event_action
+        for i in range(self.retries):
+            try:
+                response = requests.post(self.url, headers=self.headers, json=self.alert_data)
+                response.raise_for_status()
+                break
+            except requests.exceptions.RequestException as err:
+                if i < self.retries - 1:
+                    time.sleep(5)
+                else:
+                    raise err
+
+        if self.verbose:
+            logging.info("Alert triggered with details: %s", json.dumps(self.alert_data))
+
+        if response.status_code != 202:
+            logging.error("Failed to trigger alert: %s", response.text)
+        else:
+            logging.info("Alert triggered successfully")
+```
+
+Let's take a look at a simple example of how the PagerDuty library can be used to trigger and resolve incidents. The following code demonstrates how to trigger an alert if a specified application is down, and how to resolve the alert if the application comes back up.
+
+You would then call the run() method with either "trigger" or "resolve" as the event_action parameter when creating an instance of the class, and calling the run method.
+
+```
+alert = PagerDutyAlert(api_key, alert_data, routing_key, verbose=True)
+alert.run("trigger")
+```
+
+```
+alert = PagerDutyAlert(api_key, alert_data, routing_key, verbose=True)
+alert.run("resolve")
+```
+
+Thanks for reading!
+
+Go back [home](/).
